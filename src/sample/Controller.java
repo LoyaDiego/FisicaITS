@@ -12,6 +12,7 @@ import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
+import sample.Interprete.Compilador;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -23,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static sample.Configs.Configs.*;
+import static sample.Interprete.TiposToken.arrayToken;
 
 public class Controller {
     private CodeArea codeArea;
@@ -57,22 +59,36 @@ public class Controller {
     }
     public void compilar (ActionEvent event){
         String error="";
+        Long t1=System.currentTimeMillis();
+        consola.setText("");
+        arrayToken.clear();
         String[] renglones=codeArea.getText().split("\\n");
-        for(int x=0;x<renglones.length;x++){
-            boolean encontro=false;
-            for(int y=0;y<expresiones.length;y++){
-                Pattern p= Pattern.compile(expresiones[y]);
-                Matcher matcher=p.matcher(renglones[x]);
-                if (matcher.matches()){
-                    encontro=true;
-                    y=expresiones.length+1;
+        for(int x=0;x<renglones.length;x++) {
+            boolean encontro = false;
+            for (int y = 0; y < expresiones.length; y++) {
+                Pattern p = Pattern.compile(expresiones[y]);
+                Matcher matcher = p.matcher(renglones[x]);
+                if (matcher.matches()) {
+                    encontro = true;
+                    y = expresiones.length + 1;
                 }
             }
             if (!encontro) {
-                error+="Error de sintaxys en la linea "+(x+1)+" \n";
-            }
-            consola.setText(error);
+                error += "Error de sintaxys en la linea " + (x + 1) + " \n"; }
         }
+            consola.setText(error);
+            //comenzar a compilar
+            if (error.equals("")){
+                Compilador compilador=new Compilador(consola);
+                for (int x=0; x<renglones.length;x++){
+                    boolean res=compilador.compilar(renglones[x]);
+                    if (res){
+                        consola.appendText("\n Error de syntaxis en la linea " + (x+1));
+                    }
+                }
+            }
+            Long t2=System.currentTimeMillis();
+            consola.appendText("\n Compilado en "+ (t2-t1)+ " milisegundos");
     }
 
     private Task<StyleSpans<Collection<String>>> computeHighlightingAsync() {
